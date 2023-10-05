@@ -2,6 +2,7 @@
 
     require __DIR__ . '/vendor/autoload.php';
 
+	echo "Chargement...", "\n";
 	try {
 		function fetchAPItoDB ($endpoint, $url) {
 			include "connect.php";
@@ -50,14 +51,14 @@
 				}, $dataValues)
 			]);
 	
-			$pdo->query($sql);
+			return $pdo->query($sql);
 		}
 	
 		fetchAPItoDB("quality_air", "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/qualite-de-l-air-concentration-moyenne-no2-pm2-5-pm10/records?limit=20");
 	} catch (Exception $e) {
-		echo "\033[31m[?] Echec de la mise à jour : ",  $e->getMessage();
+		echo "\033[31m[?] Echec de la mise à jour : ",  $e->getMessage(), "\n";
 	} finally {
-		if (!isset($e)) echo "\033[92m[i] Mise à jour reussie";
+		if (!isset($e)) echo "\033[92m[i] Mise à jour reussie", "\n";
 	}
 
 ?>
