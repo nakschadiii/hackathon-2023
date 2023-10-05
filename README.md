@@ -1,2 +1,2 @@
 # dataserv
-command-line : ``crontab -e /5 * * * ./apiUpdate.sh``
+command-line for DB update from API : ``crontab -e /5 * * * ./apiUpdate.sh``
