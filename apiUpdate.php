@@ -54,7 +54,11 @@
 			return $pdo->query($sql);
 		}
 	
-		fetchAPItoDB("quality_air", "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/qualite-de-l-air-concentration-moyenne-no2-pm2-5-pm10/records?limit=20");
+		fetchAPItoDB("qualite-de-l-air-concentration-moyenne-no2-pm2-5-pm10", "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/qualite-de-l-air-concentration-moyenne-no2-pm2-5-pm10/records?limit=20");
+		fetchAPItoDB("ilots-de-fraicheur-equipements-activites", "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/ilots-de-fraicheur-equipements-activites/records?limit=20");
+		fetchAPItoDB("ilots-de-fraicheur-espaces-verts-frais", "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/ilots-de-fraicheur-espaces-verts-frais/records?limit=20");
+		fetchAPItoDB("qualite-de-l-air-indice-atmo", "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/qualite-de-l-air-indice-atmo/records?limit=20");
+		fetchAPItoDB("evaluation-climat-budget_par_politique_publique", "https://opendata.paris.fr//api/explore/v2.1/catalog/datasets/evaluation-climat-budget_par_politique_publique/records?limit=20");
 	} catch (Exception $e) {
 		echo "\033[31m[?] Echec de la mise à jour : ",  $e->getMessage(), "\n";
 	} finally {
