@@ -10,7 +10,7 @@ import { io } from "socket.io-client";
 const socket = io();
 socket.removeAllListeners();
 const __backend = (method, route, content, responseHandler) => socket.emit('__baeg-endeu_hochul', {method: method, route: route}, content, responseHandler);
-document.querySelector('#root').classList = `bg-stone-900 text-white grid grid-cols-1 grid-rows-[min-content_auto] bg-fixed`;
+document.querySelector('#root').classList = `bg-stone-900 text-white grid grid-cols-1 grid-rows-[min-content_auto] bg-fixed pb-8`;
 const arrayColumn = (array, column) => { return array?.map(item => item[column]); };
 function onlyUnique(value, index, array) {
     return array.indexOf(value) === index;
@@ -35,20 +35,13 @@ export const App = {
     Layout: () => {
         const [logged, setLogged] = useState(!!localStorage.getItem('IDkey'));
         const [data, setData] = useState(Jeu);
-        useEffect(() => {
-            const int = setInterval(() => {
-                setLogged(!!localStorage.getItem('IDkey'))
-            }, 0);
-            return () => clearInterval(int);
-        }, [])
-        console.log(logged);
+        const [users, setUsers] = useState([]);
 
-        useEffect(() => {
-            const int = setInterval(() => __backend("GET", "data", null, res => setData(res)), 3000);
-            return () => clearInterval(int);
-        }, [data])
+        useEffect(() => { const int = setInterval(() => { setLogged(!!localStorage.getItem('IDkey')) }, 0); return () => clearInterval(int); }, [])
+        useEffect(() => { const int = setInterval(() => __backend("GET", "data", null, res => setData(res)), 3000); return () => clearInterval(int); }, [data]);
+        useEffect(() => { const int = setInterval(() => __backend("GET", "users", null, res => setUsers(res)), 3000); return () => clearInterval(int); }, [users]);
 
-        const reverse = false;
+        console.log(users);
 
         return <>
             <section id='header'>
@@ -62,7 +55,7 @@ export const App = {
             </section>
             <section className='px-8 grid grid-cols-12 auto-rows-min gap-8'>
                 <Routes>
-                    {logged && <Route path='/' element={<App.Pages.Logged_Home data={data} />} />}
+                    {logged && <Route path='/' element={<App.Pages.Logged_Home data={data} users={users} />} />}
                     {logged && <Route path='/logout' element={<App.Pages.Logout />} />}
                     {!logged && <Route path='/' element={<App.Pages.NLogged_Home data={data} />} />}
                     <Route path='*' element={<Navigate to="/" />} />
@@ -72,7 +65,21 @@ export const App = {
     },
 
     Pages: {
-        Logged_Home: ({ arg }) => <>logged</>,
+        Logged_Home: ({ data, users }) => <>
+            <div className="col-span-12">
+                <h1 className='text-3xl'>Bonjour, {Object.values(users).find(user => parseInt(user.id) === parseInt(localStorage.getItem('IDkey')))?.firstname}</h1>
+                <h1 className='text-4xl'>Votre fil d'actualité</h1>
+            </div>
+            <div className="col-span-12 grid grid-cols-12 lg:grid-cols-[repeat(24,minmax(0,1fr))] gap-4">
+                {Object.values(data.article ?? JSON.parse(`[{"titre" : "Les Initiatives Écologiques à Paris", "content" : "Paris, la Ville Lumière, s'efforce de devenir également la Ville Verte. Avec l'augmentation des préoccupations environnementales, la capitale française a lancé plusieurs initiatives pour lutter contre le changement climatique. Tout d'abord, Paris a mis en place des zones à faibles émissions, limitant l'accès des véhicules polluants au centre-ville. Ces zones contribuent à réduire la pollution de l'air et à améliorer la qualité de vie des citoyens. De plus, la ville a investi massivement dans l'expansion de son réseau de pistes cyclables, encourageant ainsi l'utilisation de modes de transport plus écologiques. Cette démarche favorise la réduction des émissions de gaz à effet de serre et contribue à désengorger le trafic routier.Un autre aspect de l'engagement de Paris en faveur de l'écologie est la végétalisation de la ville. Paris a planté des milliers d'arbres et créé des espaces verts dans toute la ville pour améliorer la qualité de l'air, réduire l'effet d'îlot de chaleur urbain et offrir un refuge à la biodiversité urbaine. Ces efforts visent à créer un environnement urbain plus sain et agréable pour les habitants et les visiteurs de la ville. En fin de compte, Paris cherche à devenir un modèle mondial en matière de durabilité urbaine et à inspirer d'autres villes à suivre son exemple pour un avenir plus vert.", "author": 2}]`)).map((article, i) => <App.LilStuff.Box key={i} className={"grid col-span-12 p-8 gap-4"}>
+                    <h1 className='text-4xl'>{article.titre}</h1>
+                    <i>Ecrit par {Object.values(users).find(user => parseInt(user.id) === parseInt(article.author))?.firstname} {Object.values(users).find(user => parseInt(user.id) === parseInt(article.author))?.lastname}</i>
+                    <p className='title first-letter:text-7xl first-letter:mr-2 first-letter:uppercase first-letter:ml-8 first-letter:float-left'>
+                        {article.content}
+                    </p>
+                </App.LilStuff.Box>)}
+            </div>
+        </>,
         NLogged_Home: ({ data }) => <>
             <div className="col-span-12 grid grid-cols-12 lg:grid-cols-[repeat(24,minmax(0,1fr))] gap-4">
                 <App.Blocks.Identification.Box className={"h-fit col-span-12 lg:col-span-11 lg:col-end-[25]"} />
@@ -84,7 +91,10 @@ export const App = {
                 <App.Blocks.Stats title={"Evolution du taux d'ozone troposphérique dans Paris"} paragraph={"Sur la même période, ont été mesurés les quantités de ce gaz à effet de serre qu'est l'ozone. Produit à partir de composés organiques volatils et des oxydes d'azote (NOx) issus principalement du trafic routier, comme le dioxyde d'azote (NO²), sa production est déclenchée par le rayonnement solaire : d'où sa présence plus accrue en été"} reverse={true} index={"o3"} data={data} aspect={"aspect-square"} />
             </div>
             <div className='col-span-12 grid gap-4 grid-cols-12 lg:grid-cols-[repeat(24,minmax(0,1fr))]'>
-                <App.Blocks.Stats title={"Evolution du taux de dioxyde de carbone à travers le temps"} paragraph={"Durant les dernières années, des études ont été menées sur le taux de NO² dans l'air parisien, les mesures ayant été faites aussi près de la circulation, où on ressent particulièrement l'impact de cette molécule dans l'espace urbain."} reverse={false} index={"pm"} data={data} aspect={"aspect-[3/4]"} />
+                <App.Blocks.Stats title={"Qu'en est-il des particules suspendues dans l'air ?"} paragraph={"Elles font parties du trio polluant le plus devastateur de Paris (avec l'ozone et le dioxyde d'azote). Les moyennes de concentration de ce type de polluants (dont font partie, les particules fines), depassents les moyennes reglementée et recommandée sur le laps de temps de cette étude (2004 à 2014)"} reverse={false} index={"pm"} data={data} aspect={"aspect-[3/4]"} />
+            </div>
+            <div className='col-span-12 grid gap-4 grid-cols-12 lg:grid-cols-[repeat(24,minmax(0,1fr))]'>
+                <App.Blocks.Stats title={"Concernant le moment présent"} paragraph={"Nous assistons à une dégradation de plus en plus importante de la qualité de l'air... On compile en tout et pour tout comme jours avec une bonne qualité d'air à Paris, 10 jours. Les statistiques penchants très largement pour le \"moyen\". Les entrées \"dégradée\" et \"mauvaises\" glanent de plus en plus de places"} reverse={true} index={"qa"} data={data} aspect={"aspect-square"} />
             </div>
             {/* <App.Blocks.HomeGrid /> */}
         </>,
@@ -239,7 +249,7 @@ export const App = {
 
             return <ReactEcharts style={style} option={{
                 tooltip: {
-                    trigger: 'item',
+                    trigger: 'axis',
                     axisPointer: { type: 'cross' }
                 },
                 grid: {
@@ -262,7 +272,7 @@ export const App = {
                         0,  // down
                         0, // left
                     ],
-                    orient: 'vertical',
+                    orient: 'horizontal',
                     bottom: 0,
                     top: 'bottom',
                 },
