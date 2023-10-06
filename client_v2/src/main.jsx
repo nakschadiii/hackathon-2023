@@ -291,7 +291,7 @@ export const App = {
                     ]
                 }} />
 
-                {arrayColumn(example3, 'annee').filter(onlyUnique)?.map(a => <ReactEcharts key={1} option={{
+                {arrayColumn(example3, 'annee').filter(onlyUnique)?.map((a, i) => <ReactEcharts key={i} option={{
                     tooltip: {
                         trigger: 'axis',
                         axisPointer: { type: 'cross' }
@@ -301,7 +301,7 @@ export const App = {
                         orient: 'horizontal',
                         bottom: 10
                     },
-                    xAxis: { type: "category", axisTick: { alignWithLabel: true }, axisLabel: { rotate: 30 }, data: arrayColumn(example3?.filter(e => e.annee === a), "politique_publique") },
+                    xAxis: { type: "category", axisTick: { alignWithLabel: true }, data: arrayColumn(example3?.filter(e => e.annee === a), "politique_publique") },
                     yAxis: {  },
                     series: [
                     { type: 'bar', stack: 'a', name: 'Favorables', data: arrayColumn(example3?.filter(e => e.annee === a), "resultats_tres_favorables"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
