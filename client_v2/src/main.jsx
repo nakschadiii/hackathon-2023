@@ -44,15 +44,14 @@ export const App = {
         console.log(logged);
 
         useEffect(() => {
-            const int = setInterval(() => {
-                __backend("GET", "data", null, res => setData(res));
-                console.log(data)
-            }, 3000);
+            const int = setInterval(() => __backend("GET", "data", null, res => setData(res)), 3000);
             return () => clearInterval(int);
         }, [data])
 
+        const reverse = false;
+
         return <>
-            <section>
+            <section id='header'>
                 <div className='flex justify-center gap-8 p-4 h-20'>
                     <img src='citizensync_text3.png' className='' />
                     <div className='flex align-center gap-4 [&_a]:flex [&_a]:h-full [&_a]:items-center'>
@@ -61,26 +60,32 @@ export const App = {
                     </div>
                 </div>
             </section>
-            <section className='px-8 grid grid-cols-12 grid-rows-auto gap-4'>
+            <section className='px-8 grid grid-cols-12 auto-rows-min gap-8'>
                 <Routes>
-                    {logged && <Route path='/' element={<App.Pages.Logged_Home />} />}
+                    {logged && <Route path='/' element={<App.Pages.Logged_Home data={data} />} />}
                     {logged && <Route path='/logout' element={<App.Pages.Logout />} />}
-                    {!logged && <Route path='/' element={<App.Pages.NLogged_Home />} />}
+                    {!logged && <Route path='/' element={<App.Pages.NLogged_Home data={data} />} />}
                     <Route path='*' element={<Navigate to="/" />} />
                 </Routes>
-                <div className='col-span-12'>
-                    <App.LilStuff.Box>
-                        <App.Blocks.Charts data={data} />
-                    </App.LilStuff.Box>
-                </div>
             </section>
         </>
     },
 
     Pages: {
         Logged_Home: ({ arg }) => <>logged</>,
-        NLogged_Home: ({ arg }) => <>
-            <App.Blocks.Identification.Box className={"col-span-12 h-fit"} />
+        NLogged_Home: ({ data }) => <>
+            <div className="col-span-12 grid grid-cols-12 lg:grid-cols-[repeat(24,minmax(0,1fr))] gap-4">
+                <App.Blocks.Identification.Box className={"h-fit col-span-12 lg:col-span-11 lg:col-end-[25]"} />
+            </div>
+            <div className='col-span-12 grid gap-4 grid-cols-12 lg:grid-cols-[repeat(24,minmax(0,1fr))]'>
+                <App.Blocks.Stats title={"Evolution du taux de dioxyde d'azote à travers le temps"} paragraph={"Durant les dernières années, des études ont été menées sur le taux de NO² dans l'air parisien, les mesures ayant été faites aussi près de la circulation, où on ressent particulièrement l'impact de cette molécule dans l'espace urbain."} reverse={false} index={"no2"} data={data} aspect={"aspect-square"} />
+            </div>
+            <div className='col-span-12 grid gap-4 grid-cols-12 lg:grid-cols-[repeat(24,minmax(0,1fr))]'>
+                <App.Blocks.Stats title={"Evolution du taux d'ozone troposphérique dans Paris"} paragraph={"Sur la même période, ont été mesurés les quantités de ce gaz à effet de serre qu'est l'ozone. Produit à partir de composés organiques volatils et des oxydes d'azote (NOx) issus principalement du trafic routier, comme le dioxyde d'azote (NO²), sa production est déclenchée par le rayonnement solaire : d'où sa présence plus accrue en été"} reverse={true} index={"o3"} data={data} aspect={"aspect-square"} />
+            </div>
+            <div className='col-span-12 grid gap-4 grid-cols-12 lg:grid-cols-[repeat(24,minmax(0,1fr))]'>
+                <App.Blocks.Stats title={"Evolution du taux de dioxyde de carbone à travers le temps"} paragraph={"Durant les dernières années, des études ont été menées sur le taux de NO² dans l'air parisien, les mesures ayant été faites aussi près de la circulation, où on ressent particulièrement l'impact de cette molécule dans l'espace urbain."} reverse={false} index={"pm"} data={data} aspect={"aspect-[3/4]"} />
+            </div>
             {/* <App.Blocks.HomeGrid /> */}
         </>,
         Article: ({ arg }) => <></>,
@@ -168,161 +173,121 @@ export const App = {
                 </div>
             </div>
         },
-        Charts : function ({ data }) {
-            /* const example = data["evaluation-climat-budget_par_politique_publique"];
-            const diagrams = {};
-
-            example?.forEach(element => {
-                if(diagrams[element.annee] === undefined) diagrams[element.annee] = [];
-                diagrams[element.annee].push(element);
-            });
-
-            const charts = [];
-            for (const [year, data_] of Object.entries(diagrams)) {
-                charts.push(<ReactEcharts option={{
-                    xAxis: { data: arrayColumn(data_, "politique_publique") },
-                    yAxis: {},
-                    series: [
-                      { type: 'bar', data: arrayColumn(data_, "resultats_tres_favorables") },
-                      { type: 'bar', data: arrayColumn(data_, "resultats_plutot_favorables") },
-                      { type: 'bar', data: arrayColumn(data_, "resultats_neutres") },
-                      { type: 'bar', data: arrayColumn(data_, "resultats_defavorables") },
-                      { type: 'bar', data: arrayColumn(data_, "resultats_indefinis") },
-                    ]
-                }} />)
-            };
-
-            return charts.map(chart => chart) */
+        Charts : function ({ data, legends=false, index, year = 2023, style }) {
             const example = data["qualite-de-l-air-concentration-moyenne-no2-pm2-5-pm10"];
             const example2 = data["qualite-de-l-air-indice-atmo"];
             const example3 = data["evaluation-climat-budget_par_politique_publique"];
+
+            const labelOption = {
+                show: true,
+                rotate: 90,
+                formatter: '{c}  {name|{a}}',
+                fontSize: 16,
+                rich: {
+                  name: {}
+                }
+            };
 
             example?.sort((a, b) => a.annee.localeCompare(b.annee));
             example2?.sort((a, b) => a.annee.localeCompare(b.annee));
             example3?.sort((a, b) => a.annee.localeCompare(b.annee));
 
-            return <>
-                <ReactEcharts option={{
-                    tooltip: {
-                        trigger: 'axis',
-                        axisPointer: { type: 'cross' }
-                    },
-                    legend: {
-                        // Try 'horizontal'
-                        orient: 'horizontal',
-                        bottom: 10,
-                    },
-                    xAxis: { type: "category", data: arrayColumn(example, "annee") },
-                    yAxis: {},
-                    series: [
-                    { type: 'line', smooth: true, name: 'Moyenne annuelle de NO2 dans Paris', data: arrayColumn(example, "no2_fond_urbain_moyenne_annuelle_airparif"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
-                    { type: 'line', smooth: true, name: 'Moyenne annuelle de NO2 à proximité du trafic routier', data: arrayColumn(example, "no2_proximite_trafic_moyenne_annuelle_airparif"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
-                    { type: 'bar', smooth: true, name: 'Moyenne reglementée et recommandée', data: arrayColumn(example, "no2_reglementaire"), label: { show: false, position: 'bottom', textStyle: { fontSize: 15 } } },
-                    //   { type: 'bar', data: arrayColumn(example, "o3_moyenne_annuelle_airparif") },
-                    //  { type: 'bar', data: arrayColumn(example, "pm2_5_fond_urbain_moyenne_annuelle_airparif") }
-                    ]
-                }} />
+            const series = {
+                "no2" : [
+                    { type: 'line', smooth: true, emphasis: { focus: 'series' }, name: 'Moyenne annuelle de NO2 dans Paris', data: arrayColumn(example, "no2_fond_urbain_moyenne_annuelle_airparif"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
+                    { type: 'line', smooth: true, emphasis: { focus: 'series' }, name: 'Moyenne annuelle de NO2 à proximité du trafic routier', data: arrayColumn(example, "no2_proximite_trafic_moyenne_annuelle_airparif"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
+                    { type: 'bar', smooth: true, emphasis: { focus: 'series' }, name: 'Moyenne reglementée et recommandée', data: arrayColumn(example, "no2_reglementaire"), label: { show: false, position: 'bottom', textStyle: { fontSize: 15 } } },
+                ],
+                "o3" : [
+                    { type: 'line', smooth: true, emphasis: { focus: 'series' }, name: 'Moyenne annuelle d\'ozone dans Paris', data: arrayColumn(example, "o3_moyenne_annuelle_airparif"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
+                    { type: 'bar', smooth: true, emphasis: { focus: 'series' }, name: 'Moyenne recommandée', data: arrayColumn(example, "o3_recommandation_oms"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
+                    { type: 'bar', smooth: true, emphasis: { focus: 'series' }, name: 'Moyenne reglementée', data: arrayColumn(example, "o3_reglementaire"), label: { show: false, position: 'bottom', textStyle: { fontSize: 15 } } },
+                ],
+                "pm" : [
+                    { type: 'line', smooth: true, emphasis: { focus: 'series' }, name: 'Moyenne annuelle de particules en suspension dans Paris', data: arrayColumn(example, "pm10_fond_urbain_moyenne_annuelle_airparif"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
+                    { type: 'line', smooth: true, emphasis: { focus: 'series' }, name: 'Moyenne annuelle de particules en suspension, à proximité du trafic', data: arrayColumn(example, "pm10_proximite_trafic_moyenne_annuelle_airparif"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
+                    { type: 'line', smooth: true, emphasis: { focus: 'series' }, name: 'Moyenne annuelle de particules fines en suspension dans Paris', data: arrayColumn(example, "pm2_5_fond_urbain_moyenne_annuelle_airparif"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
+                    { type: 'bar', stack: 'a', emphasis: { focus: 'series' }, name: 'Moyenne recommandée de particules fines', data: arrayColumn(example, "pm2_5_recommandation_oms"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
+                    { type: 'bar', stack: 'd', emphasis: { focus: 'series' }, name: 'Moyenne reglementée de particules fines', data: arrayColumn(example, "pm2_5_reglementaire"), label: { show: false, position: 'bottom', textStyle: { fontSize: 15 } } },
+                    { type: 'bar', stack: 'b', emphasis: { focus: 'series' }, name: 'Moyenne recommandée de particules en suspension', data: arrayColumn(example, "pm10_recommandation_oms"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
+                    { type: 'bar', stack: 'c', emphasis: { focus: 'series' }, name: 'Moyenne reglementée de particules en suspension', data: arrayColumn(example, "pm10_reglementaire"), label: { show: false, position: 'bottom', textStyle: { fontSize: 15 } } },
+                ],
+                "qa" : [
+                    { type: 'bar', smooth: true, emphasis: { focus: 'series' }, name: 'Bonne', data: arrayColumn(example2, "ind_jour_qa_bonne"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
+                    { type: 'bar', smooth: true, emphasis: { focus: 'series' }, name: 'Moyenne', data: arrayColumn(example2, "ind_jour_qa_moyenne"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
+                    { type: 'bar', smooth: true, emphasis: { focus: 'series' }, name: 'Dégradée', data: arrayColumn(example2, "ind_jour_qa_degradee"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
+                    { type: 'bar', smooth: true, emphasis: { focus: 'series' }, name: 'Mauvaise', data: arrayColumn(example2, "ind_jour_qa_mauvaise"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
+                    { type: 'bar', smooth: true, emphasis: { focus: 'series' }, name: 'Très mauvaise', data: arrayColumn(example2, "ind_jour_qa_tres_mauvaise"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
+                    { type: 'bar', smooth: true, emphasis: { focus: 'series' }, name: 'Extremement mauvaise', data: arrayColumn(example2, "ind_jour_qa_extremement_mauvaise"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
+                ],
+                "budget" : [
+                    { type: 'bar', stack: 'a', emphasis: { focus: 'series' }, name: 'Favorables', data: arrayColumn(example3?.filter(e => e.annee === year), "resultats_tres_favorables"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
+                    { type: 'bar', stack: 'a', emphasis: { focus: 'series' }, name: 'Plutôt favorables', data: arrayColumn(example3?.filter(e => e.annee === year), "resultats_plutot_favorables"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
+                    { type: 'bar', stack: 'a', emphasis: { focus: 'series' }, name: 'Neutres', data: arrayColumn(example3?.filter(e => e.annee === year), "resultats_neutres"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
+                    { type: 'bar', stack: 'a', emphasis: { focus: 'series' }, name: 'Défavorables', data: arrayColumn(example3?.filter(e => e.annee === year), "resultats_defavorables"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
+                    { type: 'bar', stack: 'a', emphasis: { focus: 'series' }, name: 'Indéfinis', data: arrayColumn(example3?.filter(e => e.annee === year), "resultats_indefinis"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
+                ]
+            }
 
-                <ReactEcharts option={{
-                    tooltip: {
-                        trigger: 'axis',
-                        axisPointer: { type: 'cross' }
-                    },
-                    legend: {
-                        // Try 'horizontal'
-                        orient: 'horizontal',
-                        bottom: 10
-                    },
-                    xAxis: { type: "category", data: arrayColumn(example, "annee") },
-                    yAxis: {},
-                    series: [
-                    { type: 'line', smooth: true, name: 'Moyenne annuelle d\'ozone dans Paris', data: arrayColumn(example, "o3_moyenne_annuelle_airparif"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
-                    { type: 'bar', smooth: true, name: 'Moyenne recommandée', data: arrayColumn(example, "o3_recommandation_oms"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
-                    { type: 'bar', smooth: true, name: 'Moyenne reglementée', data: arrayColumn(example, "o3_reglementaire"), label: { show: false, position: 'bottom', textStyle: { fontSize: 15 } } },
-                    //   { type: 'bar', data: arrayColumn(example, "") },
-                    //  { type: 'bar', data: arrayColumn(example, "pm2_5_fond_urbain_moyenne_annuelle_airparif") }
-                    ]
-                }} />
+            const xAxis = {
+                "no2" : { type: "category", data: arrayColumn(example, "annee") },
+                "o3" : { type: "category", data: arrayColumn(example, "annee") },
+                "pm" : { type: "category", data: arrayColumn(example, "annee") },
+                "qa" : { type: "category", data: arrayColumn(example2, "annee") },
+                "budget" : { type: "category", data: arrayColumn(example3?.filter(e => e.annee === year), "politique_publique"), axisTick: { alignWithLabel: true } }
+            }
 
-                <ReactEcharts option={{
-                    tooltip: {
-                        trigger: 'axis',
-                        axisPointer: { type: 'cross' }
+            return <ReactEcharts style={style} option={{
+                tooltip: {
+                    trigger: 'item',
+                    axisPointer: { type: 'cross' }
+                },
+                grid: {
+                    containLabel: true,
+                    top: 20,
+                    left: 10,
+                    right: 10,
+                    itemGap : 5,
+                },
+                [legends && 'legend']: {
+                    itemGap : 5,
+                    height: "auto",
+                    textStyle : {
+                        fontSize: 10,
                     },
-                    legend: {
-                        // Try 'horizontal'
-                        orient: 'horizontal',
-                        bottom: 10
-                    },
-                    xAxis: { type: "category", data: arrayColumn(example, "annee") },
-                    yAxis: {},
-                    series: [
-                    { type: 'line', smooth: true, name: 'Moyenne annuelle de particules en suspension dans Paris', data: arrayColumn(example, "pm10_fond_urbain_moyenne_annuelle_airparif"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
-                    { type: 'line', smooth: true, name: 'Moyenne annuelle de particules en suspension, à proximité du trafic', data: arrayColumn(example, "pm10_proximite_trafic_moyenne_annuelle_airparif"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
-                    { type: 'line', smooth: true, name: 'Moyenne annuelle de particules fines en suspension dans Paris', data: arrayColumn(example, "pm2_5_fond_urbain_moyenne_annuelle_airparif"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
-                    { type: 'bar', stack: 'a', name: 'Moyenne recommandée de particules fines', data: arrayColumn(example, "pm2_5_recommandation_oms"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
-                    { type: 'bar', stack: 'd', name: 'Moyenne reglementée de particules fines', data: arrayColumn(example, "pm2_5_reglementaire"), label: { show: false, position: 'bottom', textStyle: { fontSize: 15 } } },
-                    { type: 'bar', stack: 'b', name: 'Moyenne recommandée de particules en suspension', data: arrayColumn(example, "pm10_recommandation_oms"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
-                    { type: 'bar', stack: 'c', name: 'Moyenne reglementée de particules en suspension', data: arrayColumn(example, "pm10_reglementaire"), label: { show: false, position: 'bottom', textStyle: { fontSize: 15 } } },
-                    ]
-                }} />
-
-                <ReactEcharts option={{
-                    tooltip: {
-                        trigger: 'axis',
-                        axisPointer: { type: 'cross' }
-                    },
-                    legend: {
-                        // Try 'horizontal'
-                        orient: 'horizontal',
-                        bottom: 10
-                    },
-                    xAxis: { type: "category", data: arrayColumn(example2, "annee") },
-                    yAxis: {},
-                    series: [
-                    { type: 'bar', smooth: true, name: 'Bonne', data: arrayColumn(example2, "ind_jour_qa_bonne"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
-                    { type: 'bar', smooth: true, name: 'Moyenne', data: arrayColumn(example2, "ind_jour_qa_moyenne"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
-                    { type: 'bar', smooth: true, name: 'Dégradée', data: arrayColumn(example2, "ind_jour_qa_degradee"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
-                    { type: 'bar', smooth: true, name: 'Mauvaise', data: arrayColumn(example2, "ind_jour_qa_mauvaise"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
-                    { type: 'bar', smooth: true, name: 'Très mauvaise', data: arrayColumn(example2, "ind_jour_qa_tres_mauvaise"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
-                    { type: 'bar', smooth: true, name: 'Extremement mauvaise', data: arrayColumn(example2, "ind_jour_qa_extremement_mauvaise"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
-                    //   { type: 'bar', data: arrayColumn(example, "") },
-                    //  { type: 'bar', data: arrayColumn(example, "pm2_5_fond_urbain_moyenne_annuelle_airparif") }
-                    ]
-                }} />
-
-                {arrayColumn(example3, 'annee').filter(onlyUnique)?.map((a, i) => <ReactEcharts key={i} option={{
-                    tooltip: {
-                        trigger: 'axis',
-                        axisPointer: { type: 'cross' }
-                    },
-                    legend: {
-                        // Try 'horizontal'
-                        orient: 'horizontal',
-                        bottom: 10
-                    },
-                    xAxis: { type: "category", axisTick: { alignWithLabel: true }, data: arrayColumn(example3?.filter(e => e.annee === a), "politique_publique") },
-                    yAxis: {  },
-                    series: [
-                    { type: 'bar', stack: 'a', name: 'Favorables', data: arrayColumn(example3?.filter(e => e.annee === a), "resultats_tres_favorables"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
-                    { type: 'bar', stack: 'a', name: 'Plutôt favorables', data: arrayColumn(example3?.filter(e => e.annee === a), "resultats_plutot_favorables"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
-                    { type: 'bar', stack: 'a', name: 'Neutres', data: arrayColumn(example3?.filter(e => e.annee === a), "resultats_neutres"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
-                    { type: 'bar', stack: 'a', name: 'Défavorables', data: arrayColumn(example3?.filter(e => e.annee === a), "resultats_defavorables"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
-                    { type: 'bar', stack: 'a', name: 'Indéfinis', data: arrayColumn(example3?.filter(e => e.annee === a), "resultats_indefinis"), label: { show: false, position: 'top', textStyle: { fontSize: 15 } }},
-                    ]
-                }} />)}
-            </>
-
-            /* for (const [year, data_] of Object.entries(example)) {
-                charts.push()
-            };
-
-            return charts.map(chart => chart) */
+                    type: "scroll",
+                    padding: [
+                        20,  // up
+                        0, // right
+                        0,  // down
+                        0, // left
+                    ],
+                    orient: 'vertical',
+                    bottom: 0,
+                    top: 'bottom',
+                },
+                xAxis: xAxis[index],
+                yAxis: {},
+                series: series[index],
+            }} />
+        },
+        Stats : function ({ title, paragraph, reverse=false, index, data, aspect }) {
+            return <div className={'grid sm:flex gap-8 items-center h-fit col-span-12 lg:col-span-11 '+(reverse ? "flex-row-reverse lg:col-end-[25]" : "flex-row")}>
+                <App.LilStuff.Box className={aspect+" h-fit lg:w-1/4 md:w-1/2 sm:w-full"} style={{minWidth: "310px"}}>
+                    <App.Blocks.Charts data={data} index={index} legends={true} style={{height: '100%', zoom: ".9"}} />
+                </App.LilStuff.Box>
+                <div className='w-full h-fit'>
+                    <h1 className='text-4xl'>{title}</h1>
+                    <p className='title first-letter:text-7xl first-letter:mr-2 first-letter:uppercase first-letter:ml-8 first-letter:float-left'>
+                        {paragraph}
+                    </p>
+                </div>
+            </div>
         }
     },
 
     LilStuff: {
-        Box : ({children, className=null}) => <div className={['p-4 bg-white rounded-lg shadow-2xl shadow-black overflow-hidden text-zinc-900', className].join(' ')}>{children}</div>,
+        Box : ({children, className=null, style}) => <div className={['p-4 bg-white rounded-lg shadow-2xl shadow-black overflow-hidden text-zinc-900', className].join(' ')} style={style}>{children}</div>,
         Button : ({children, className=null, type="button"}) => <button type={type} className={['p-2 text-white font-medium rounded-lg', className].join(' ')}>{children}</button>
     }
 };
