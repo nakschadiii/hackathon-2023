@@ -46,6 +46,13 @@ function select ($pdo, $columns, $table, $contains) {
 // app()->get('/', function() {
 // 	echo json_encode("GET");
 // });
+app()->get('/users', function() use ($pdo) {
+	response()->json(
+		(function() use ($pdo) {
+			return select($pdo, ['id', 'firstname', 'lastname', 'password', 'IDkey'], 'users', []);
+		})()
+	);
+});
 app()->post('/login', function() use ($pdo) {
 	response()->json(
 		//request()->body()
